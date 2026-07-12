@@ -38,10 +38,26 @@ def run_screener():
         
         if not results_df.empty:
             results_file = "option_screen_results.csv"
-            results_df.to_csv(results_file, index=False)
-            print(f"Saved results to {results_file}")
             
-            # Send Email Notification
+            # Format columns for CSV output
+            csv_df = results_df.copy()
+            pct_columns = [
+                "Historical Volatility", "Implied Volatility", "EV Volatility", 
+                "3-Year Return", "Premium %", "OTM %", "Annualized Yield", 
+                "Bid/Ask Spread %", "10-Day (H-L)/C", "30-Day (H-L)/C"
+            ]
+            for col in pct_columns:
+                if col in csv_df.columns:
+                    csv_df[col] = (csv_df[col] * 100).map(lambda x: f"{x:.2f}%" if pd.notnull(x) else "")
+            
+            # Format IV/HV as a simple 2-decimal number
+            if "IV / HV" in csv_df.columns:
+                csv_df["IV / HV"] = csv_df["IV / HV"].map(lambda x: f"{x:.2f}" if pd.notnull(x) else "")
+                
+            csv_df.to_csv(results_file, index=False)
+            print(f"Saved formatted results to {results_file}")
+            
+            # Send Email Notification using the original unformatted numeric DataFrame
             send_email_report(results_df)
         else:
             print("No results were generated.")
