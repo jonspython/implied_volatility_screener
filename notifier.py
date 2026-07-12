@@ -9,10 +9,10 @@ def send_email_report(df):
         return
 
     # Filter for Annualized Yield > 100% (1.0)
-    filtered_df = df[df['Annualized Yield'] > 1.0].copy()
+    filtered_df = df[df['Annualized Yield'] > 1.250].copy()
     
     if filtered_df.empty:
-        print("No tickers matched the criteria (Annualized Yield > 100%).")
+        print("No tickers matched the criteria (Annualized Yield > 150%).")
         return
 
     # Sort descending by yield

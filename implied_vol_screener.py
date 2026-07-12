@@ -39,6 +39,20 @@ def get_price_statistics(price_history):
     results["Historical Volatility"] = (
         hv.iloc[-1] if not hv.dropna().empty else np.nan
     )
+    
+    if "High" in price_history and "Low" in price_history and "Close" in price_history:
+        hl_c = (price_history["High"] - price_history["Low"]) / price_history["Close"]
+        
+        avg_10 = hl_c.rolling(10).mean()
+        avg_30 = hl_c.rolling(30).mean()
+        
+        results["10-Day (H-L)/C"] = avg_10.iloc[-1] if not avg_10.dropna().empty else np.nan
+        results["30-Day (H-L)/C"] = avg_30.iloc[-1] if not avg_30.dropna().empty else np.nan
+        
+        if not np.isnan(results["30-Day (H-L)/C"]) and results["30-Day (H-L)/C"] != 0:
+            results["10-Day / 30-Day (H-L)/C"] = results["10-Day (H-L)/C"] / results["30-Day (H-L)/C"]
+        else:
+            results["10-Day / 30-Day (H-L)/C"] = np.nan
 
     # Approximate 3-year return (750 trading days)
     period = min(750, len(prices)-1)
@@ -179,11 +193,20 @@ def process_single_ticker(symbol, price_data):
     if isinstance(price_data.columns, pd.MultiIndex):
         try:
             adj_close = price_data["Adj Close"][symbol]
+            high = price_data["High"][symbol]
+            low = price_data["Low"][symbol]
+            close = price_data["Close"][symbol]
         except KeyError:
             adj_close = pd.Series(dtype=float)
+            high = pd.Series(dtype=float)
+            low = pd.Series(dtype=float)
+            close = pd.Series(dtype=float)
     else:
         # If single ticker was passed to yf.download
         adj_close = price_data["Adj Close"] if "Adj Close" in price_data else pd.Series(dtype=float)
+        high = price_data["High"] if "High" in price_data else pd.Series(dtype=float)
+        low = price_data["Low"] if "Low" in price_data else pd.Series(dtype=float)
+        close = price_data["Close"] if "Close" in price_data else pd.Series(dtype=float)
 
     print(f"Processing {symbol}")
     row = {"Ticker": symbol}
@@ -208,7 +231,12 @@ def process_single_ticker(symbol, price_data):
 
         row["Market Cap / EV"] = leverage
 
-        history = pd.DataFrame({"Adj Close": adj_close}).dropna()
+        history = pd.DataFrame({
+            "Adj Close": adj_close,
+            "High": high,
+            "Low": low,
+            "Close": close
+        }).dropna()
         if history.empty:
             return None
 
@@ -269,6 +297,7 @@ def option_screen(ticker_list, max_workers=20):
         "Ticker", "Sector", "Industry", "Current Price",
         "Market Cap", "Enterprise Value", "Market Cap / EV",
         "Historical Volatility", "Implied Volatility", "IV / HV", "EV Volatility",
+        "10-Day (H-L)/C", "30-Day (H-L)/C", "10-Day / 30-Day (H-L)/C",
         "3-Year Return", "Expiration", "DTE", "Strike",
         "Bid", "Ask", "Midpoint", "Premium %", "OTM %", "Annualized Yield",
         "Bid/Ask Spread %", "Option Volume", "Open Interest"
