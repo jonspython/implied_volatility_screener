@@ -3,9 +3,13 @@ import os
 import uvicorn
 from implied_vol_screener import option_screen
 from notifier import send_email_report
+from ticker_generator import generate_tickers
 
 def run_screener():
     print("Starting Screener Process...")
+    
+    # Generate tickers dynamically from CBOE volume file (if available)
+    generate_tickers()
     
     # Load tickers
     tickers_file = "tickers.csv"
