@@ -218,8 +218,11 @@ def process_single_ticker(symbol, price_data):
         market_cap = info.get("marketCap")
         enterprise_value = info.get("enterpriseValue")
 
+        row["Company Name"] = info.get("shortName") or info.get("longName")
         row["Sector"] = info.get("sector")
         row["Industry"] = info.get("industry")
+        row["52-Week High"] = info.get("fiftyTwoWeekHigh")
+        row["52-Week Low"] = info.get("fiftyTwoWeekLow")
 
         row["Market Cap"] = market_cap
         row["Enterprise Value"] = enterprise_value
@@ -294,7 +297,8 @@ def option_screen(ticker_list, max_workers=20):
         return df
 
     columns = [
-        "Ticker", "Sector", "Industry", "Current Price",
+        "Ticker", "Company Name", "Sector", "Industry", "Current Price",
+        "52-Week High", "52-Week Low",
         "Market Cap", "Enterprise Value", "Market Cap / EV",
         "Historical Volatility", "Implied Volatility", "IV / HV", "EV Volatility",
         "10-Day (H-L)/C", "30-Day (H-L)/C", "10-Day / 30-Day (H-L)/C",

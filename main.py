@@ -49,6 +49,18 @@ def run_screener():
             for col in pct_columns:
                 if col in csv_df.columns:
                     csv_df[col] = (csv_df[col] * 100).map(lambda x: f"{x:.2f}%" if pd.notnull(x) else "")
+                    
+            # Format dollar amounts
+            dollar_columns = ["Current Price", "52-Week High", "52-Week Low", "Strike", "Bid", "Ask", "Midpoint"]
+            for col in dollar_columns:
+                if col in csv_df.columns:
+                    csv_df[col] = csv_df[col].map(lambda x: f"${x:,.2f}" if pd.notnull(x) else "")
+                    
+            # Format large integers with commas
+            int_columns = ["Market Cap", "Enterprise Value", "Option Volume", "Open Interest"]
+            for col in int_columns:
+                if col in csv_df.columns:
+                    csv_df[col] = csv_df[col].map(lambda x: f"{x:,.0f}" if pd.notnull(x) else "")
             
             # Format IV/HV as a simple 2-decimal number
             if "IV / HV" in csv_df.columns:
