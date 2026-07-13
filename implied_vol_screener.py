@@ -81,7 +81,7 @@ def get_option_statistics(ticker, current_price):
 
         dte = (datetime.strptime(exp,"%Y-%m-%d")-today).days
 
-        if dte > 0:
+        if dte >= 7:
             expirations.append((exp,dte))
 
     if len(expirations)==0:
