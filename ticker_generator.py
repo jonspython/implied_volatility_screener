@@ -39,7 +39,9 @@ def generate_tickers():
         # Keep unique Underlying symbols
         df = df.drop_duplicates(subset=['Underlying'])
         
-        ticker_list = df['Underlying'].tolist()
+        # Take the top 2000 to have a large enough pool for price filtering
+        top_pool = df.head(2000)
+        ticker_list = top_pool['Underlying'].tolist()
         
         print(f"Fetching recent prices for top-volume tickers to apply price filter...")
         
