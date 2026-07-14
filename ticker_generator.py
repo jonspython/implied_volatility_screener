@@ -56,35 +56,23 @@ def generate_tickers():
         print(f"Fetching recent prices for top-volume tickers to apply price filter...")
         
         eligible_tickers = []
-        batch_size = 50
         
-        for i in range(0, len(ticker_list), batch_size):
-            batch = ticker_list[i:i+batch_size]
-            print(f"Fetching batch {i//batch_size + 1}/{len(ticker_list)//batch_size}...")
-            
-            try:
-                # threads=False to prevent immediate rate limit ban
-                price_data = yf.download(batch, period="1d", progress=False, threads=False)
+        for i, ticker in enumerate(ticker_list):
+            if i % 100 == 0:
+                print(f"Processed {i}/{len(ticker_list)} tickers...")
                 
-                if "Adj Close" in price_data:
-                    close_prices = price_data["Adj Close"].iloc[-1]
-                elif "Close" in price_data:
-                    close_prices = price_data["Close"].iloc[-1]
-                else:
-                    close_prices = pd.Series(dtype=float)
+            try:
+                info = yf.Ticker(ticker).fast_info
+                price = info.get('lastPrice')
+                
+                if price is not None and price < 20:
+                    eligible_tickers.append(ticker)
                     
-                for ticker in batch:
-                    if ticker in close_prices and pd.notnull(close_prices[ticker]) and close_prices[ticker] < 20:
-                        eligible_tickers.append(ticker)
-                        
                 if len(eligible_tickers) >= 1000:
-                    eligible_tickers = eligible_tickers[:1000]
                     break
                     
-                time.sleep(1) # short sleep to respect rate limits
             except Exception as e:
-                print(f"Error fetching batch {i//batch_size + 1}: {e}")
-                time.sleep(5) # longer sleep on error
+                pass
         
         # Write to tickers.csv
         tickers_df = pd.DataFrame({"Ticker": eligible_tickers})
