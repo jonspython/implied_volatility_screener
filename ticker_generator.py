@@ -39,9 +39,7 @@ def generate_tickers():
         # Keep unique Underlying symbols
         df = df.drop_duplicates(subset=['Underlying'])
         
-        # Take the top 2000 to have a large enough pool for price filtering
-        top_pool = df.head(2000)
-        ticker_list = top_pool['Underlying'].tolist()
+        ticker_list = df['Underlying'].tolist()
         
         print(f"Fetching recent prices for top-volume tickers to apply price filter...")
         
@@ -67,8 +65,8 @@ def generate_tickers():
                     if ticker in close_prices and pd.notnull(close_prices[ticker]) and close_prices[ticker] < 20:
                         eligible_tickers.append(ticker)
                         
-                if len(eligible_tickers) >= 500:
-                    eligible_tickers = eligible_tickers[:500]
+                if len(eligible_tickers) >= 1000:
+                    eligible_tickers = eligible_tickers[:1000]
                     break
                     
                 time.sleep(1) # short sleep to respect rate limits
