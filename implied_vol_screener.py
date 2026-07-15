@@ -189,27 +189,17 @@ def get_option_statistics(ticker, current_price):
 import concurrent.futures
 
 def process_single_ticker(symbol, price_data):
-    # Safely extract price data, handling both MultiIndex and single level
+    # Safely extract price data strictly using Close
     if isinstance(price_data.columns, pd.MultiIndex):
-        # Extract sub-dataframes
-        if "Adj Close" in price_data.columns.levels[0]:
-            adj_close_df = price_data["Adj Close"]
-        elif "Close" in price_data.columns.levels[0]:
-            adj_close_df = price_data["Close"]
-        else:
-            adj_close_df = None
-            
         high_df = price_data["High"] if "High" in price_data.columns.levels[0] else None
         low_df = price_data["Low"] if "Low" in price_data.columns.levels[0] else None
         close_df = price_data["Close"] if "Close" in price_data.columns.levels[0] else None
 
-        adj_close = adj_close_df[symbol] if adj_close_df is not None and symbol in adj_close_df.columns else pd.Series(dtype=float)
         high = high_df[symbol] if high_df is not None and symbol in high_df.columns else pd.Series(dtype=float)
         low = low_df[symbol] if low_df is not None and symbol in low_df.columns else pd.Series(dtype=float)
         close = close_df[symbol] if close_df is not None and symbol in close_df.columns else pd.Series(dtype=float)
     else:
-        # Fallback for old yfinance behavior
-        adj_close = price_data["Adj Close"] if "Adj Close" in price_data.columns else (price_data["Close"] if "Close" in price_data.columns else pd.Series(dtype=float))
+        # Fallback for old yfinance single-ticker behavior
         high = price_data["High"] if "High" in price_data.columns else pd.Series(dtype=float)
         low = price_data["Low"] if "Low" in price_data.columns else pd.Series(dtype=float)
         close = price_data["Close"] if "Close" in price_data.columns else pd.Series(dtype=float)
@@ -252,7 +242,7 @@ def process_single_ticker(symbol, price_data):
         row["Next Earnings"] = next_earnings
 
         history = pd.DataFrame({
-            "Adj Close": adj_close,
+            "Adj Close": close,
             "High": high,
             "Low": low,
             "Close": close
@@ -315,7 +305,7 @@ def option_screen(ticker_list, max_workers=20):
 
     columns = [
         "Ticker", "Company Name", "Sector", "Industry", "Current Price",
-        "52-Week High", "52-Week Low",
+        "Next Earnings", "52-Week High", "52-Week Low",
         "Market Cap", "Enterprise Value", "Market Cap / EV",
         "Historical Volatility", "Implied Volatility", "IV / HV", "EV Volatility",
         "10-Day (H-L)/C", "30-Day (H-L)/C", "10-Day / 30-Day (H-L)/C",
