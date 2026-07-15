@@ -281,14 +281,15 @@ def process_single_ticker(symbol, price_data):
             return row
         
         except Exception as e:
-            if "Too Many Requests" in str(e) or "Rate limited" in str(e):
-                if attempt < max_retries - 1:
-                    time.sleep(random.uniform(2, 5))
-                    continue
-            print(f"Error processing {symbol}: {e}")
+            if attempt < max_retries - 1:
+                # Exponential backoff: 5s, 10s, 20s, 40s...
+                sleep_time = (2 ** attempt) * 5 + random.uniform(0, 2)
+                time.sleep(sleep_time)
+                continue
+            print(f"Error processing {symbol} after {max_retries} attempts: {e}")
             return None
 
-def option_screen(ticker_list, max_workers=5):
+def option_screen(ticker_list, max_workers=2):
     print(f"Downloading historical data for {len(ticker_list)} tickers...")
     price_data = yf.download(
         ticker_list,

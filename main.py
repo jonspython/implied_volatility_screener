@@ -34,7 +34,7 @@ def run_screener():
     print(f"Loaded {len(ticker_list)} tickers. Running screen...")
     
     try:
-        results_df = option_screen(ticker_list, max_workers=5)
+        results_df = option_screen(ticker_list, max_workers=2)
         
         if not results_df.empty:
             results_file = "option_screen_results.csv"
