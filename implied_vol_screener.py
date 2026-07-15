@@ -188,98 +188,107 @@ def get_option_statistics(ticker, current_price):
 
 import concurrent.futures
 
+import time
+import random
+
 def process_single_ticker(symbol, price_data):
-    # Safely extract price data strictly using Close
-    if isinstance(price_data.columns, pd.MultiIndex):
-        high_df = price_data["High"] if "High" in price_data.columns.levels[0] else None
-        low_df = price_data["Low"] if "Low" in price_data.columns.levels[0] else None
-        close_df = price_data["Close"] if "Close" in price_data.columns.levels[0] else None
-
-        high = high_df[symbol] if high_df is not None and symbol in high_df.columns else pd.Series(dtype=float)
-        low = low_df[symbol] if low_df is not None and symbol in low_df.columns else pd.Series(dtype=float)
-        close = close_df[symbol] if close_df is not None and symbol in close_df.columns else pd.Series(dtype=float)
-    else:
-        # Fallback for old yfinance single-ticker behavior
-        high = price_data["High"] if "High" in price_data.columns else pd.Series(dtype=float)
-        low = price_data["Low"] if "Low" in price_data.columns else pd.Series(dtype=float)
-        close = price_data["Close"] if "Close" in price_data.columns else pd.Series(dtype=float)
-
-    print(f"Processing {symbol}")
-    row = {"Ticker": symbol}
-
-    try:
-        ticker = yf.Ticker(symbol)
-        info = ticker.info
-
-        market_cap = info.get("marketCap")
-        enterprise_value = info.get("enterpriseValue")
-
-        row["Company Name"] = info.get("shortName") or info.get("longName")
-        row["Sector"] = info.get("sector")
-        row["Industry"] = info.get("industry")
-        row["52-Week High"] = info.get("fiftyTwoWeekHigh")
-        row["52-Week Low"] = info.get("fiftyTwoWeekLow")
-
-        row["Market Cap"] = market_cap
-        row["Enterprise Value"] = enterprise_value
-
-        if market_cap is not None and enterprise_value is not None and enterprise_value > 0:
-            leverage = market_cap / enterprise_value
-        else:
-            leverage = np.nan
-
-        row["Market Cap / EV"] = leverage
-
-        # Get next earnings date from calendar if available
-        next_earnings = "N/A"
-        calendar = ticker.calendar
-        if isinstance(calendar, dict) and "Earnings Date" in calendar:
-            dates = calendar["Earnings Date"]
-            if dates and len(dates) > 0:
-                import datetime
-                # format the date
-                next_earnings = dates[0].strftime("%Y-%m-%d") if isinstance(dates[0], datetime.date) else str(dates[0])
-        row["Next Earnings"] = next_earnings
-
-        history = pd.DataFrame({
-            "Adj Close": close,
-            "High": high,
-            "Low": low,
-            "Close": close
-        }).dropna()
-        if history.empty:
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            # Safely extract price data strictly using Close
+            if isinstance(price_data.columns, pd.MultiIndex):
+                high_df = price_data["High"] if "High" in price_data.columns.levels[0] else None
+                low_df = price_data["Low"] if "Low" in price_data.columns.levels[0] else None
+                close_df = price_data["Close"] if "Close" in price_data.columns.levels[0] else None
+        
+                high = high_df[symbol] if high_df is not None and symbol in high_df.columns else pd.Series(dtype=float)
+                low = low_df[symbol] if low_df is not None and symbol in low_df.columns else pd.Series(dtype=float)
+                close = close_df[symbol] if close_df is not None and symbol in close_df.columns else pd.Series(dtype=float)
+            else:
+                # Fallback for old yfinance single-ticker behavior
+                high = price_data["High"] if "High" in price_data.columns else pd.Series(dtype=float)
+                low = price_data["Low"] if "Low" in price_data.columns else pd.Series(dtype=float)
+                close = price_data["Close"] if "Close" in price_data.columns else pd.Series(dtype=float)
+        
+            print(f"Processing {symbol}")
+            row = {"Ticker": symbol}
+        
+            ticker = yf.Ticker(symbol)
+            info = ticker.info
+        
+            market_cap = info.get("marketCap")
+            enterprise_value = info.get("enterpriseValue")
+        
+            row["Company Name"] = info.get("shortName") or info.get("longName")
+            row["Sector"] = info.get("sector")
+            row["Industry"] = info.get("industry")
+            row["52-Week High"] = info.get("fiftyTwoWeekHigh")
+            row["52-Week Low"] = info.get("fiftyTwoWeekLow")
+        
+            row["Market Cap"] = market_cap
+            row["Enterprise Value"] = enterprise_value
+        
+            if market_cap is not None and enterprise_value is not None and enterprise_value > 0:
+                leverage = market_cap / enterprise_value
+            else:
+                leverage = np.nan
+        
+            row["Market Cap / EV"] = leverage
+        
+            # Get next earnings date from calendar if available
+            next_earnings = "N/A"
+            calendar = ticker.calendar
+            if isinstance(calendar, dict) and "Earnings Date" in calendar:
+                dates = calendar["Earnings Date"]
+                if dates and len(dates) > 0:
+                    import datetime
+                    # format the date
+                    next_earnings = dates[0].strftime("%Y-%m-%d") if isinstance(dates[0], datetime.date) else str(dates[0])
+            row["Next Earnings"] = next_earnings
+        
+            history = pd.DataFrame({
+                "Adj Close": close,
+                "High": high,
+                "Low": low,
+                "Close": close
+            }).dropna()
+            if history.empty:
+                return None
+        
+            current_price = history["Adj Close"].iloc[-1]
+            row["Current Price"] = current_price
+        
+            stats = get_price_statistics(history)
+            if stats:
+                row.update(stats)
+        
+            if not np.isnan(leverage) and "Historical Volatility" in row and not np.isnan(row["Historical Volatility"]):
+                row["EV Volatility"] = leverage * row["Historical Volatility"]
+            else:
+                row["EV Volatility"] = np.nan
+        
+            option_stats = get_option_statistics(ticker, current_price)
+            row.update(option_stats)
+        
+            hv = row.get("Historical Volatility", np.nan)
+            iv = row.get("Implied Volatility", np.nan)
+        
+            if not np.isnan(hv) and hv > 0 and not np.isnan(iv):
+                row["IV / HV"] = iv / hv
+            else:
+                row["IV / HV"] = np.nan
+        
+            return row
+        
+        except Exception as e:
+            if "Too Many Requests" in str(e) or "Rate limited" in str(e):
+                if attempt < max_retries - 1:
+                    time.sleep(random.uniform(2, 5))
+                    continue
+            print(f"Error processing {symbol}: {e}")
             return None
 
-        current_price = history["Adj Close"].iloc[-1]
-        row["Current Price"] = current_price
-
-        stats = get_price_statistics(history)
-        if stats:
-            row.update(stats)
-
-        if not np.isnan(leverage) and "Historical Volatility" in row and not np.isnan(row["Historical Volatility"]):
-            row["EV Volatility"] = leverage * row["Historical Volatility"]
-        else:
-            row["EV Volatility"] = np.nan
-
-        option_stats = get_option_statistics(ticker, current_price)
-        row.update(option_stats)
-
-        hv = row.get("Historical Volatility", np.nan)
-        iv = row.get("Implied Volatility", np.nan)
-
-        if not np.isnan(hv) and hv > 0 and not np.isnan(iv):
-            row["IV / HV"] = iv / hv
-        else:
-            row["IV / HV"] = np.nan
-
-        return row
-
-    except Exception as e:
-        print(f"Error processing {symbol}: {e}")
-        return None
-
-def option_screen(ticker_list, max_workers=20):
+def option_screen(ticker_list, max_workers=5):
     print(f"Downloading historical data for {len(ticker_list)} tickers...")
     price_data = yf.download(
         ticker_list,
