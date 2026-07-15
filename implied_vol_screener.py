@@ -234,6 +234,17 @@ def process_single_ticker(symbol, price_data):
 
         row["Market Cap / EV"] = leverage
 
+        # Get next earnings date from calendar if available
+        next_earnings = "N/A"
+        calendar = ticker.calendar
+        if isinstance(calendar, dict) and "Earnings Date" in calendar:
+            dates = calendar["Earnings Date"]
+            if dates and len(dates) > 0:
+                import datetime
+                # format the date
+                next_earnings = dates[0].strftime("%Y-%m-%d") if isinstance(dates[0], datetime.date) else str(dates[0])
+        row["Next Earnings"] = next_earnings
+
         history = pd.DataFrame({
             "Adj Close": adj_close,
             "High": high,
