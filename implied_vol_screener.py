@@ -189,24 +189,30 @@ def get_option_statistics(ticker, current_price):
 import concurrent.futures
 
 def process_single_ticker(symbol, price_data):
-    # If price_data is a Series (only 1 ticker), convert it or handle it
+    # Safely extract price data, handling both MultiIndex and single level
     if isinstance(price_data.columns, pd.MultiIndex):
-        try:
-            adj_close = price_data["Adj Close"][symbol]
-            high = price_data["High"][symbol]
-            low = price_data["Low"][symbol]
-            close = price_data["Close"][symbol]
-        except KeyError:
-            adj_close = pd.Series(dtype=float)
-            high = pd.Series(dtype=float)
-            low = pd.Series(dtype=float)
-            close = pd.Series(dtype=float)
+        # Extract sub-dataframes
+        if "Adj Close" in price_data.columns.levels[0]:
+            adj_close_df = price_data["Adj Close"]
+        elif "Close" in price_data.columns.levels[0]:
+            adj_close_df = price_data["Close"]
+        else:
+            adj_close_df = None
+            
+        high_df = price_data["High"] if "High" in price_data.columns.levels[0] else None
+        low_df = price_data["Low"] if "Low" in price_data.columns.levels[0] else None
+        close_df = price_data["Close"] if "Close" in price_data.columns.levels[0] else None
+
+        adj_close = adj_close_df[symbol] if adj_close_df is not None and symbol in adj_close_df.columns else pd.Series(dtype=float)
+        high = high_df[symbol] if high_df is not None and symbol in high_df.columns else pd.Series(dtype=float)
+        low = low_df[symbol] if low_df is not None and symbol in low_df.columns else pd.Series(dtype=float)
+        close = close_df[symbol] if close_df is not None and symbol in close_df.columns else pd.Series(dtype=float)
     else:
-        # If single ticker was passed to yf.download
-        adj_close = price_data["Adj Close"] if "Adj Close" in price_data else pd.Series(dtype=float)
-        high = price_data["High"] if "High" in price_data else pd.Series(dtype=float)
-        low = price_data["Low"] if "Low" in price_data else pd.Series(dtype=float)
-        close = price_data["Close"] if "Close" in price_data else pd.Series(dtype=float)
+        # Fallback for old yfinance behavior
+        adj_close = price_data["Adj Close"] if "Adj Close" in price_data.columns else (price_data["Close"] if "Close" in price_data.columns else pd.Series(dtype=float))
+        high = price_data["High"] if "High" in price_data.columns else pd.Series(dtype=float)
+        low = price_data["Low"] if "Low" in price_data.columns else pd.Series(dtype=float)
+        close = price_data["Close"] if "Close" in price_data.columns else pd.Series(dtype=float)
 
     print(f"Processing {symbol}")
     row = {"Ticker": symbol}
