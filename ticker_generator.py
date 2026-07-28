@@ -65,7 +65,7 @@ def generate_tickers():
                 info = yf.Ticker(ticker).fast_info
                 price = info.get('lastPrice')
                 
-                if price is not None and price < 20:
+                if price is not None and price < 30:
                     eligible_tickers.append(ticker)
                     
                 if len(eligible_tickers) >= 1000:
@@ -78,7 +78,7 @@ def generate_tickers():
         tickers_df = pd.DataFrame({"Ticker": eligible_tickers})
         tickers_df.to_csv("tickers.csv", index=False)
         
-        print(f"Successfully generated tickers.csv with {len(tickers_df)} highly liquid tickers under $20.")
+        print(f"Successfully generated tickers.csv with {len(tickers_df)} highly liquid tickers under $30.")
         
     except Exception as e:
         print(f"Failed to generate tickers: {e}")
