@@ -54,6 +54,22 @@ def get_price_statistics(price_history):
         else:
             results["10-Day / 30-Day (H-L)/C"] = np.nan
 
+    if "Close" in price_history:
+        close_prices = price_history["Close"]
+        avg_5 = close_prices.rolling(5).mean()
+        avg_15 = close_prices.rolling(15).mean()
+        
+        avg_5_last = avg_5.iloc[-1] if not avg_5.dropna().empty else np.nan
+        avg_15_last = avg_15.iloc[-1] if not avg_15.dropna().empty else np.nan
+        
+        if not np.isnan(avg_15_last) and avg_15_last != 0:
+            ratio = avg_5_last / avg_15_last
+            results["5-Day / 15-Day Close"] = ratio
+            results["Momentum"] = "positive" if ratio > 1 else "negative"
+        else:
+            results["5-Day / 15-Day Close"] = np.nan
+            results["Momentum"] = "N/A"
+
     # Approximate 3-year return (750 trading days)
     period = min(750, len(prices)-1)
 
@@ -315,6 +331,7 @@ def option_screen(ticker_list, max_workers=2):
 
     columns = [
         "Ticker", "Company Name", "Sector", "Industry", "Current Price",
+        "5-Day / 15-Day Close", "Momentum",
         "Next Earnings", "52-Week High", "52-Week Low",
         "Market Cap", "Enterprise Value", "Market Cap / EV",
         "Historical Volatility", "Implied Volatility", "IV / HV", "EV Volatility",

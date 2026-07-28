@@ -66,6 +66,10 @@ def run_screener():
             if "IV / HV" in csv_df.columns:
                 csv_df["IV / HV"] = csv_df["IV / HV"].map(lambda x: f"{x:.2f}" if pd.notnull(x) else "")
                 
+            # Format 5-Day / 15-Day Close as a simple 2-decimal number
+            if "5-Day / 15-Day Close" in csv_df.columns:
+                csv_df["5-Day / 15-Day Close"] = csv_df["5-Day / 15-Day Close"].map(lambda x: f"{x:.2f}" if pd.notnull(x) else "")
+                
             csv_df.to_csv(results_file, index=False)
             print(f"Saved formatted results to {results_file}")
             
