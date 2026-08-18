@@ -137,14 +137,14 @@ def get_option_statistics(ticker, current_price):
 
     midpoint = (bid+ask)/2
 
-    collateral = strike-midpoint
+    collateral = strike-bid
 
     annualized_yield = np.nan
 
     if collateral>0:
 
         annualized_yield = (
-            midpoint /
+            bid /
             collateral *
             365/dte
         )
@@ -157,7 +157,7 @@ def get_option_statistics(ticker, current_price):
             ask-bid
         )/midpoint
 
-    premium_pct = midpoint/strike
+    premium_pct = bid/strike
 
     otm_pct = (
         current_price-strike
