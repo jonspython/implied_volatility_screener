@@ -44,6 +44,7 @@ def run_screener():
             pct_columns = [
                 "Historical Volatility", "Implied Volatility", "EV Volatility", 
                 "3-Year Return", "Premium %", "OTM %", "Annualized Yield", 
+                "Adjusted Annualized Yield",
                 "Bid/Ask Spread %", "10-Day (H-L)/C", "30-Day (H-L)/C"
             ]
             for col in pct_columns:

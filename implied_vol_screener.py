@@ -149,6 +149,17 @@ def get_option_statistics(ticker, current_price):
             365/dte
         )
 
+    adjusted_premium = bid + (current_price - strike)
+    adjusted_collateral = current_price - adjusted_premium
+    adjusted_annualized_yield = np.nan
+    
+    if adjusted_collateral > 0:
+        adjusted_annualized_yield = (
+            adjusted_premium /
+            adjusted_collateral *
+            365/dte
+        )
+
     spread_pct = np.nan
 
     if midpoint>0:
@@ -185,6 +196,9 @@ def get_option_statistics(ticker, current_price):
 
         "Annualized Yield":
             annualized_yield,
+
+        "Adjusted Annualized Yield":
+            adjusted_annualized_yield,
 
         "Bid/Ask Spread %":
             spread_pct,
@@ -338,7 +352,7 @@ def option_screen(ticker_list, max_workers=2):
         "10-Day (H-L)/C", "30-Day (H-L)/C", "10-Day / 30-Day (H-L)/C",
         "3-Year Return", "Expiration", "DTE", "Strike",
         "Bid", "Ask", "Midpoint", "Premium %", "OTM %", "Annualized Yield",
-        "Bid/Ask Spread %", "Option Volume", "Open Interest"
+        "Adjusted Annualized Yield", "Bid/Ask Spread %", "Option Volume", "Open Interest"
     ]
 
     columns = [c for c in columns if c in df.columns]
