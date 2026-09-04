@@ -44,7 +44,8 @@ def run_screener():
             pct_columns = [
                 "Historical Volatility", "Implied Volatility", "EV Volatility", 
                 "3-Year Return", "Premium %", "OTM %", "Annualized Yield", 
-                "Bid/Ask Spread %", "10-Day (H-L)/C", "30-Day (H-L)/C"
+                "Bid/Ask Spread %", "10-Day (H-L)/C", "30-Day (H-L)/C",
+                "1-Day Price Change %"
             ]
             for col in pct_columns:
                 if col in csv_df.columns:

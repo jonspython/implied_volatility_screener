@@ -33,6 +33,11 @@ def get_price_statistics(price_history):
 
     daily_returns = prices.pct_change().dropna()
 
+    if not daily_returns.empty:
+        results["1-Day Price Change %"] = daily_returns.iloc[-1]
+    else:
+        results["1-Day Price Change %"] = np.nan
+
     # 1-Year Historical Volatility (252 trading days)
     hv = daily_returns.rolling(252).std() * np.sqrt(252)
 
@@ -330,7 +335,7 @@ def option_screen(ticker_list, max_workers=2):
         return df
 
     columns = [
-        "Ticker", "Company Name", "Sector", "Industry", "Current Price",
+        "Ticker", "Company Name", "Sector", "Industry", "Current Price", "1-Day Price Change %",
         "5-Day / 15-Day Close", "Momentum",
         "Next Earnings", "52-Week High", "52-Week Low",
         "Market Cap", "Enterprise Value", "Market Cap / EV",
