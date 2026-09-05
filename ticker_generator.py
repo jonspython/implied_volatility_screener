@@ -65,7 +65,7 @@ def generate_tickers():
                 info = yf.Ticker(ticker).fast_info
                 price = info.get('lastPrice')
                 
-                if price is not None and price < 30:
+                if price is not None and price < 40:
                     eligible_tickers.append(ticker)
                     
                 if len(eligible_tickers) >= 1000:

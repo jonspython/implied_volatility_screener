@@ -4,3 +4,7 @@ numpy
 fastapi
 uvicorn
 jinja2
+o p e n p y x l  
+html5lib
+lxml  
+ 

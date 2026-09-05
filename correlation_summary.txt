@@ -1,0 +1,55 @@
+=== Correlation Summary ===
+Observations (trading days): 251
+Approx. standard error per correlation estimate: 0.063 (treat |r| below ~0.13 as not reliably different from zero)
+
+Average pairwise correlation (17 names, excl. SPY): 0.136
+Effective N (equal-weight): 5.35 of 17 names
+Effective N (weighted): n/a -- add a 'weights.csv' with Ticker,Weight columns to use your actual dollar allocation instead of equal-weight
+
+PC1 share of total variance (incl. SPY): 20.4%
+Top PC1 loadings:
+  SPY    +0.350
+  OI     +0.289
+  COMP   +0.277
+  HUN    +0.270
+  FUN    +0.268
+  ABR    +0.268
+  HLF    +0.264
+  LYFT   +0.261
+
+Correlation to SPY (highest to lowest):
+  LUMN   +0.455
+  COMP   +0.422
+  KGC    +0.413
+  LYFT   +0.367
+  FUN    +0.292
+  OI     +0.273
+  HUN    +0.266
+  HLF    +0.250
+  ABR    +0.231
+  MOS    +0.214
+  HPQ    +0.213
+  DKNG   +0.171
+  WU     +0.151
+  PZZA   +0.105
+  WEN    +0.058
+  DOW    -0.004
+  ACI    -0.071
+
+Highest pairwise correlations:
+  DOW-HUN: +0.545
+  HUN-MOS: +0.408
+  HLF-OI: +0.365
+  COMP-OI: +0.322
+  DOW-MOS: +0.318
+Lowest pairwise correlations:
+  COMP-DOW: -0.227
+  ACI-LUMN: -0.053
+  ACI-KGC: -0.035
+  KGC-WEN: -0.027
+  LUMN-WEN: -0.026
+
+Stress correlation (SPY daily return <= -1%, n=25 days):
+  Average pairwise correlation under stress: 0.089 (vs. 0.136 full-sample)
+  Effective N under stress: 6.99 of 17 names
+  Saved to correlation_matrix_stress.csv
